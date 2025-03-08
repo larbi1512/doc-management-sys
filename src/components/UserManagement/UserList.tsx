@@ -20,27 +20,36 @@ const UserList: React.FC = () => {
     const pageSize = 10;
 
     // Generate department options from users
-    const departmentOptions = Array.from(new Set(users.map(user => user.department))).filter(Boolean).map(dept => ({ value: dept, label: dept }));
+    const departmentOptions = Array.from(new Set(users.map(user => user.department)))
+        .filter(dept => dept) // Remove empty values
+        .map(dept => ({ value: dept, label: dept }));
 
     // Filtered and sorted users
     const filteredUsers = users.filter(user => {
-        const matchesSearch = user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            user.role.toLowerCase().includes(searchQuery.toLowerCase());
+        const searchLower = searchQuery.toLowerCase();
+        const matchesSearch =
+            user.name?.toLowerCase().includes(searchLower) ||
+            user.email?.toLowerCase().includes(searchLower) ||
+            user.role?.toLowerCase().includes(searchLower);
 
-        const matchesDepartment = departmentFilter ?
-            user.department === departmentFilter : true;
+        const matchesDepartment = departmentFilter
+            ? user.department === departmentFilter
+            : true;
 
-        const matchesStatus = statusFilter ?
-            user.status === statusFilter : true;
+        const matchesStatus = statusFilter
+            ? user.status === statusFilter
+            : true;
 
         return matchesSearch && matchesDepartment && matchesStatus;
     });
 
     const sortedUsers = [...filteredUsers].sort((a, b) => {
-        if (a[sortBy] < b[sortBy]) return sortOrder === "asc" ? -1 : 1;
-        if (a[sortBy] > b[sortBy]) return sortOrder === "asc" ? 1 : -1;
-        return 0;
+        const aValue = a[sortBy]?.toString().toLowerCase() || "";
+        const bValue = b[sortBy]?.toString().toLowerCase() || "";
+
+        return sortOrder === "asc"
+            ? aValue.localeCompare(bValue)
+            : bValue.localeCompare(aValue);
     });
 
     const paginatedUsers = sortedUsers.slice(
@@ -56,18 +65,35 @@ const UserList: React.FC = () => {
             setSortBy(key);
             setSortOrder("asc");
         }
+        setCurrentPage(1); // Reset to first page when sorting changes
     };
 
     const handleRowClick = (userId: number, e: React.MouseEvent) => {
-        // Prevent navigation if clicking on action icons
         if (!(e.target as HTMLElement).closest('.action-icon')) {
             navigate(`/users/${userId}`);
+        }
+    };
+
+    const handleDelete = async (userId: number) => {
+        if (window.confirm("Are you sure you want to delete this user?")) {
+            try {
+                await deleteUser(userId);
+                // Refresh the list after deletion
+                setCurrentPage(prev => Math.min(prev, totalPages - 1));
+            } catch (error) {
+                console.error("Failed to delete user:", error);
+            }
         }
     };
 
     useEffect(() => {
         refreshUsers();
     }, []);
+
+    // Reset to first page when filters change
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchQuery, departmentFilter, statusFilter]);
 
     if (loadingUsers) return <div className="p-4">Loading users...</div>;
     if (errorUsers) return <div className="p-4 text-red-500">Error: {errorUsers}</div>;
@@ -156,7 +182,7 @@ const UserList: React.FC = () => {
                                     <ActionIcons
                                         className="action-icon"
                                         editUrl={`/users/edit/${user.id}`}
-                                        onDelete={() => deleteUser(user.id)}
+                                        onDelete={() => handleDelete(user.id)}
                                     />
                                 </TableCell>
                             </TableRow>
