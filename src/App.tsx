@@ -26,6 +26,8 @@ import UserDetail from "./components/UserManagement/UserDetail";
 import DocumentDetail from "./components/DocumentManagement/DocumentDetail";
 import { DataProvider } from "./context/DataContext";
 import ProtectedRoute from "./components/common/ProtectedRoute";
+import DepartmentForm from "./components/DepartmentManagement/DepartmentForm";
+
 
 
 export default function App() {
@@ -55,6 +57,9 @@ export default function App() {
             <Route path="/users/new" element={<UserForm />} />
             <Route path="/users/:id" element={<UserDetail />} />
             <Route path="/users/edit/:id" element={<UserForm />} />
+
+            {/* Department Management Routes */}
+            <Route path="/departments/new" element={<DepartmentForm />} />
 
             {/* Document Management Routes */}
             <Route path="/documents" element={<DocumentListPage />} />

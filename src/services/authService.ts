@@ -1,11 +1,27 @@
 // services/authService.ts
-const users = [
-    { email: "user@example.com", password: "password123" },
-    { email: "admin@example.com", password: "admin123" },
-];
+import axios from 'axios';
 
-export const fakeLogin = async (email: string, password: string) => {
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    const user = users.find(u => u.email === email && u.password === password);
-    return user ? { email: user.email } : null;
+
+const API_BASE = 'http://localhost:8081'; 
+
+export const login = async (email: string, password: string) => {
+    const response = await axios.post(`${API_BASE}/auth/login`, {
+        username: email,
+        password,
+    });
+    return {
+        token: response.data.token,
+        role: response.data.role,
+        id: response.data.id,
+    }
 };
+
+export const register = async (username: string, email: string, password: string, role: string) => {
+    const response = await axios.post(`${API_BASE}/auth/register`, {
+        username,
+        email,
+        password,
+        role,
+    });
+    return response.data;
+  };
