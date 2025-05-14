@@ -7,9 +7,24 @@ import { FilterDropdown } from "../common/FilterDropdown";
 import { ActionIcons } from "../common/ActionIcons";
 import { Link, useNavigate } from "react-router-dom";
 import { PlusIcon } from "../../icons";
+import { RootState } from "../../app/store";
+import { useSelector } from "react-redux";
+import { User } from "../../type"
+import {Department} from "../../type";
+
+
 
 const UserList: React.FC = () => {
-    const { users, loadingUsers, errorUsers, deleteUser, refreshUsers } = useData();
+    const { users, 
+        loadingUsers, 
+        errorUsers, 
+        deleteUser, 
+        refreshUsers,
+        departments,  
+        loadingDepts,
+        errorDepts 
+
+    } = useData();
     const navigate = useNavigate();
     const [sortBy, setSortBy] = useState<keyof User>("id");
     const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
@@ -19,10 +34,14 @@ const UserList: React.FC = () => {
     const [statusFilter, setStatusFilter] = useState("");
     const pageSize = 10;
 
+    const { user: currentUser } = useSelector((state: RootState) => state.auth);
+    console.log('Current user role:', currentUser?.role);
+
     // Generate department options from users
-    const departmentOptions = Array.from(new Set(users.map(user => user.department)))
-        .filter(dept => dept) // Remove empty values
-        .map(dept => ({ value: dept, label: dept }));
+    const departmentOptions = departments.map(dept => ({
+        value: dept.name,
+        label: dept.name
+    }));
 
     // Filtered and sorted users
     const filteredUsers = users.filter(user => {
@@ -125,13 +144,26 @@ const UserList: React.FC = () => {
                         onChange={setStatusFilter}
                     />
                 </div>
-                <Link
-                    to="/users/new"
-                    className="flex items-center gap-2 px-4 py-2 text-white bg-blue-600 rounded hover:bg-blue-700"
-                >
-                    <PlusIcon className="w-5 h-5" />
-                    Add User
-                </Link>
+
+                {currentUser?.role === 'ADMIN' && (
+                
+                    <div className="flex gap-2">
+                        <Link
+                            to="/departments/new"
+                            className="flex items-center gap-2 px-4 py-2 text-white bg-green-600 rounded hover:bg-green-700"
+                        >
+                            <PlusIcon className="w-5 h-5" />
+                            Add Department
+                        </Link>
+                        <Link
+                            to="/users/new"
+                            className="flex items-center gap-2 px-4 py-2 text-white bg-blue-600 rounded hover:bg-blue-700"
+                        >
+                            <PlusIcon className="w-5 h-5" />
+                            Add User
+                        </Link>
+                    </div>
+)}
             </div>
 
             <div className="overflow-x-auto">

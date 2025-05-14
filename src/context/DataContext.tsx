@@ -1,8 +1,9 @@
 // context/DataContext.tsx
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { User } from "../data/users";
 import { Document, documents as initialDocs } from "../data/documents";
 import { fetchUsers, createUser, updateUser, deleteUser } from "../services/userService";
+import { User } from "../type";
+import { fetchDepartments, createDepartment, Department } from "../services/departmentService";
 
 interface DataContextType {
     // User-related properties
@@ -18,6 +19,11 @@ interface DataContextType {
     documents: Document[];
     addDocument: (doc: Document) => void;
     updateDocument: (doc: Document) => void;
+
+    departments: Department[];
+    loadingDepts: boolean;
+    errorDepts: string | null;
+    refreshDepartments: () => Promise<void>;
 }
 
 const DataContext = createContext<DataContextType>({} as DataContextType);
@@ -30,6 +36,10 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Document state (unchanged)
     const [documents, setDocuments] = useState<Document[]>(initialDocs);
+
+    const [departments, setDepartments] = useState<Department[]>([]);
+    const [loadingDepts, setLoadingDepts] = useState(false);
+    const [errorDepts, setErrorDepts] = useState<string | null>(null);
 
     // User API integration
     const fetchUsersData = async () => {
@@ -45,8 +55,22 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     };
 
+    const refreshDepartments = async () => {
+        setLoadingDepts(true);
+        try {
+            const data = await fetchDepartments();
+            setDepartments(data);
+            setErrorDepts(null);
+        } catch (err) {
+            setErrorDepts('Failed to fetch departments');
+        } finally {
+            setLoadingDepts(false);
+        }
+    };
+
     useEffect(() => {
         fetchUsersData();
+        refreshDepartments();
     }, []);
 
     const handleAddUser = async (userData: Omit<User, 'id'>) => {
@@ -108,7 +132,13 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
             // Document-related values (unchanged)
             documents,
             addDocument,
-            updateDocument
+            updateDocument,
+
+            // Department-related values
+            departments,
+            loadingDepts,
+            errorDepts,
+            refreshDepartments
         }}>
             {children}
         </DataContext.Provider>
