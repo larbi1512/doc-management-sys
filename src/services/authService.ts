@@ -1,11 +1,8 @@
 // services/authService.ts
-import axios from 'axios';
-
-
-const API_BASE = 'http://localhost:8081'; 
+import api from './api';
 
 export const login = async (email: string, password: string) => {
-    const response = await axios.post(`${API_BASE}/auth/login`, {
+    const response = await api.post(`/auth/login`, {
         username: email,
         password,
     });
@@ -17,7 +14,7 @@ export const login = async (email: string, password: string) => {
 };
 
 export const register = async (username: string, email: string, password: string, role: string) => {
-    const response = await axios.post(`${API_BASE}/auth/register`, {
+    const response = await api.post(`/auth/register`, {
         username,
         email,
         password,

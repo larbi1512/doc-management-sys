@@ -2,8 +2,8 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { Document, documents as initialDocs } from "../data/documents";
 import { fetchUsers, createUser, updateUser, deleteUser } from "../services/userService";
-import { User } from "../type";
-import { fetchDepartments, createDepartment, Department } from "../services/departmentService";
+import { User, Department, ApiResponse } from "../type";
+import { fetchDepartments, createDepartment } from "../services/departmentService";
 
 interface DataContextType {
     // User-related properties
@@ -42,11 +42,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [errorDepts, setErrorDepts] = useState<string | null>(null);
 
     // User API integration
-    const fetchUsersData = async () => {
+    const loadUsers = async () => {
         setLoadingUsers(true);
         try {
-            const response = await fetchUsers();
-            setUsers(response.data as User[]);
+            const users = await fetchUsers();
+            setUsers(users);
             setErrorUsers(null);
         } catch (error) {
             setErrorUsers(error instanceof Error ? error.message : 'Failed to fetch users');
@@ -55,62 +55,25 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     };
 
-    const refreshDepartments = async () => {
+    const loadDepartments = async () => {
         setLoadingDepts(true);
         try {
             const data = await fetchDepartments();
             setDepartments(data);
             setErrorDepts(null);
-        } catch (err) {
-            setErrorDepts('Failed to fetch departments');
+        } catch (error) {
+            setErrorDepts(error instanceof Error ? error.message : 'Failed to fetch departments');
         } finally {
             setLoadingDepts(false);
         }
     };
 
     useEffect(() => {
-        fetchUsersData();
-        refreshDepartments();
+        loadUsers();
+        loadDepartments();
     }, []);
 
-    const handleAddUser = async (userData: Omit<User, 'id'>) => {
-        setLoadingUsers(true);
-        try {
-            const newUser = await createUser(userData);
-            setUsers(prev => [...prev, newUser]);
-        } catch (error) {
-            setErrorUsers(error instanceof Error ? error.message : 'Failed to add user');
-            throw error;
-        } finally {
-            setLoadingUsers(false);
-        }
-    };
-
-    const handleUpdateUser = async (id: number, userData: Partial<User>) => {
-        setLoadingUsers(true);
-        try {
-            const updatedUser = await updateUser(id.toString(), userData);
-            setUsers(prev => prev.map(u => u.id === id ? { ...u, ...updatedUser, id: u.id } : u));
-        } catch (error) {
-            setErrorUsers(error instanceof Error ? error.message : 'Failed to update user');
-            throw error;
-        } finally {
-            setLoadingUsers(false);
-        }
-    };
-
-    const handleDeleteUser = async (id: number) => {
-        setLoadingUsers(true);
-        try {
-            await deleteUser(id.toString());
-            setUsers(prev => prev.filter(u => u.id !== id));
-        } catch (error) {
-            setErrorUsers(error instanceof Error ? error.message : 'Failed to delete user');
-            throw error;
-        } finally {
-            setLoadingUsers(false);
-        }
-    };
+    
 
     // Document functions (unchanged)
     const addDocument = (doc: Document) => setDocuments(prev => [...prev, doc]);
@@ -124,10 +87,19 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
             users,
             loadingUsers,
             errorUsers,
-            addUser: handleAddUser,
-            updateUser: handleUpdateUser,
-            deleteUser: handleDeleteUser,
-            refreshUsers: fetchUsersData,
+            addUser: async (userData) => {
+                const newUser = await createUser(userData);
+                setUsers(prev => [...prev, newUser]);
+            },
+            updateUser: async (id, userData) => {
+                const updatedUser = await updateUser(id, userData);
+                setUsers(prev => prev.map(u => u.id === id ? updatedUser : u));
+            },
+            deleteUser: async (id) => {
+                await deleteUser(id);
+                setUsers(prev => prev.filter(u => u.id !== id));
+            },
+            refreshUsers: loadUsers,
 
             // Document-related values (unchanged)
             documents,
@@ -138,7 +110,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
             departments,
             loadingDepts,
             errorDepts,
-            refreshDepartments
+            refreshDepartments: loadDepartments
         }}>
             {children}
         </DataContext.Provider>

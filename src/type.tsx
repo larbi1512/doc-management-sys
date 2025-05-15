@@ -3,21 +3,16 @@
 // User Type
 export interface User {
     id: number;
-    name: string;
+    username: string;
     email: string;
-    role: 'USER' | 'ADMIN';
-    department: string;
-    status: 'Active' | 'Inactive' | 'On Leave';
-    hire_date?: string;
-    address?: string;
-    phone?: string;
+    role: string;
+    departmentIds?: number[]; // Added to store assigned department IDs
 }
 
-// Department Type
 export interface Department {
     id: number;
     name: string;
-}
+  }
 
 // API Response Structure
 export interface ApiResponse<T> {
@@ -84,4 +79,30 @@ export interface PaginationControlsProps {
     totalPages: number;
     onPrevious: () => void;
     onNext: () => void;
+  }
+
+// types.ts
+export interface AuthResponse {
+    token: string;
+    email?: string;
+    username?: string;
+}
+
+export interface LoginCredentials {
+    email: string;
+    password: string;
+}
+
+export interface RegistrationData {
+    username: string;
+    email: string;
+    password: string;
+    role: string;
+}
+
+export interface JwtPayload {
+    sub?: string;
+    role?: string;
+    exp?: number;
+    iat?: number;
   }
