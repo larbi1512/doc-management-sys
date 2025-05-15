@@ -4,21 +4,26 @@ import { useNavigate } from "react-router-dom";
 import { createDepartment } from "../../services/departmentService";
 import Input from "../form/input/InputField";
 import Button from "../ui/button/Button";
+import { useData } from "../../context/DataContext";
+
 
 const DepartmentForm = () => {
     const [name, setName] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const navigate = useNavigate();
+    const { refreshDepartments } = useData();
+
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        await refreshDepartments();
         setLoading(true);
         try {
             await createDepartment(name);
             navigate("/users");
-        } catch (err) {
-            setError("Failed to create department");
+        } catch (err: any) {
+            setError(err.response?.data?.message || "Failed to create department");
         } finally {
             setLoading(false);
         }

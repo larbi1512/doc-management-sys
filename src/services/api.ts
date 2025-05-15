@@ -1,16 +1,25 @@
-// services/api.ts
+// src/services/api.ts
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: 'http://localhost:8080', 
+  baseURL: 'http://localhost:8080',
 });
 
-api.interceptors.request.use((config) => {
+import type { InternalAxiosRequestConfig } from 'axios';
+
+api.interceptors.request.use(
+  (config: InternalAxiosRequestConfig) => {
     const token = localStorage.getItem('token');
+    console.log('[api] token=', token, '→', config.method, config.url);
     if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
+      // ensure headers object exists
+      config.headers = config.headers ?? {};
+      config.headers['Authorization'] = `Bearer ${token}`;
+      config.headers['Content-Type'] = 'application/json';      
     }
     return config;
-});
+  },
+  (error) => Promise.reject(error)
+);
 
 export default api;

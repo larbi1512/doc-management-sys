@@ -9,8 +9,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { PlusIcon } from "../../icons";
 import { RootState } from "../../app/store";
 import { useSelector } from "react-redux";
-import { User } from "../../type"
-import {Department} from "../../type";
+import { User, Department } from "../../type";
 
 
 
@@ -21,8 +20,7 @@ const UserList: React.FC = () => {
         deleteUser, 
         refreshUsers,
         departments,  
-        loadingDepts,
-        errorDepts 
+        refreshDepartments
 
     } = useData();
     const navigate = useNavigate();
@@ -31,7 +29,6 @@ const UserList: React.FC = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [searchQuery, setSearchQuery] = useState("");
     const [departmentFilter, setDepartmentFilter] = useState("");
-    const [statusFilter, setStatusFilter] = useState("");
     const pageSize = 10;
 
     const { user: currentUser } = useSelector((state: RootState) => state.auth);
@@ -47,19 +44,16 @@ const UserList: React.FC = () => {
     const filteredUsers = users.filter(user => {
         const searchLower = searchQuery.toLowerCase();
         const matchesSearch =
-            user.name?.toLowerCase().includes(searchLower) ||
+            user.username?.toLowerCase().includes(searchLower) ||
             user.email?.toLowerCase().includes(searchLower) ||
             user.role?.toLowerCase().includes(searchLower);
 
         const matchesDepartment = departmentFilter
-            ? user.department === departmentFilter
+            ? Array.isArray(user.departmentIds) && user.departmentIds.includes(Number(departmentFilter))
             : true;
 
-        const matchesStatus = statusFilter
-            ? user.status === statusFilter
-            : true;
 
-        return matchesSearch && matchesDepartment && matchesStatus;
+        return matchesSearch && matchesDepartment;
     });
 
     const sortedUsers = [...filteredUsers].sort((a, b) => {
@@ -107,12 +101,13 @@ const UserList: React.FC = () => {
 
     useEffect(() => {
         refreshUsers();
+        refreshDepartments();
     }, []);
 
     // Reset to first page when filters change
     useEffect(() => {
         setCurrentPage(1);
-    }, [searchQuery, departmentFilter, statusFilter]);
+    }, [searchQuery, departmentFilter]);
 
     if (loadingUsers) return <div className="p-4">Loading users...</div>;
     if (errorUsers) return <div className="p-4 text-red-500">Error: {errorUsers}</div>;
@@ -133,15 +128,6 @@ const UserList: React.FC = () => {
                         placeholder="All Departments"
                         value={departmentFilter}
                         onChange={setDepartmentFilter}
-                    />
-                    <FilterDropdown
-                        options={["Active", "Inactive", "On Leave"].map(status => ({
-                            value: status,
-                            label: status
-                        }))}
-                        placeholder="All Statuses"
-                        value={statusFilter}
-                        onChange={setStatusFilter}
                     />
                 </div>
 
@@ -170,7 +156,7 @@ const UserList: React.FC = () => {
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            {["name", "email", "role", "status"].map((header) => (
+                            {["name", "email", "role"].map((header) => (
                                 <TableCell
                                     key={header}
                                     isHeader
@@ -195,20 +181,10 @@ const UserList: React.FC = () => {
                                 className="cursor-pointer hover:bg-gray-50"
                                 onClick={(e) => handleRowClick(user.id, e)}
                             >
-                                <TableCell>{user.name}</TableCell>
+                                <TableCell>{user.username}</TableCell>
                                 <TableCell>{user.email}</TableCell>
                                 <TableCell>
                                     <Badge color="primary">{user.role}</Badge>
-                                </TableCell>
-                                <TableCell>
-                                    <Badge
-                                        color={
-                                            user.status === "Active" ? "success" :
-                                                user.status === "On Leave" ? "warning" : "danger"
-                                        }
-                                    >
-                                        {user.status}
-                                    </Badge>
                                 </TableCell>
                                 <TableCell>
                                     <ActionIcons
