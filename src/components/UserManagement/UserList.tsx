@@ -1,4 +1,3 @@
-// components/UserManagement/UserList.tsx
 import React, { useEffect, useState } from "react";
 import { useData } from "../../context/DataContext";
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "../ui/table";
@@ -11,17 +10,15 @@ import { RootState } from "../../app/store";
 import { useSelector } from "react-redux";
 import { User, Department } from "../../type";
 
-
-
 const UserList: React.FC = () => {
-    const { users, 
-        loadingUsers, 
-        errorUsers, 
-        deleteUser, 
+    const {
+        users,
+        loadingUsers,
+        errorUsers,
+        deleteUser,
         refreshUsers,
-        departments,  
+        departments,
         refreshDepartments
-
     } = useData();
     const navigate = useNavigate();
     const [sortBy, setSortBy] = useState<keyof User>("id");
@@ -32,15 +29,12 @@ const UserList: React.FC = () => {
     const pageSize = 10;
 
     const { user: currentUser } = useSelector((state: RootState) => state.auth);
-    console.log('Current user role:', currentUser?.role);
 
-    // Generate department options from users
     const departmentOptions = departments.map(dept => ({
-        value: dept.name,
+        value: dept.id.toString(), // Use ID for filtering
         label: dept.name
     }));
 
-    // Filtered and sorted users
     const filteredUsers = users.filter(user => {
         const searchLower = searchQuery.toLowerCase();
         const matchesSearch =
@@ -52,14 +46,12 @@ const UserList: React.FC = () => {
             ? Array.isArray(user.departmentIds) && user.departmentIds.includes(Number(departmentFilter))
             : true;
 
-
         return matchesSearch && matchesDepartment;
     });
 
     const sortedUsers = [...filteredUsers].sort((a, b) => {
         const aValue = a[sortBy]?.toString().toLowerCase() || "";
         const bValue = b[sortBy]?.toString().toLowerCase() || "";
-
         return sortOrder === "asc"
             ? aValue.localeCompare(bValue)
             : bValue.localeCompare(aValue);
@@ -78,7 +70,7 @@ const UserList: React.FC = () => {
             setSortBy(key);
             setSortOrder("asc");
         }
-        setCurrentPage(1); // Reset to first page when sorting changes
+        setCurrentPage(1);
     };
 
     const handleRowClick = (userId: number, e: React.MouseEvent) => {
@@ -91,7 +83,6 @@ const UserList: React.FC = () => {
         if (window.confirm("Are you sure you want to delete this user?")) {
             try {
                 await deleteUser(userId);
-                // Refresh the list after deletion
                 setCurrentPage(prev => Math.min(prev, totalPages - 1));
             } catch (error) {
                 console.error("Failed to delete user:", error);
@@ -99,12 +90,19 @@ const UserList: React.FC = () => {
         }
     };
 
+    const getDepartmentNames = (departmentIds: number[]): string => {
+        if (!departmentIds || departmentIds.length === 0) return "None";
+        return departmentIds
+            .map(id => departments.find(d => d.id === id)?.name)
+            .filter(Boolean)
+            .join(", ");
+    };
+
     useEffect(() => {
         refreshUsers();
         refreshDepartments();
     }, []);
 
-    // Reset to first page when filters change
     useEffect(() => {
         setCurrentPage(1);
     }, [searchQuery, departmentFilter]);
@@ -130,9 +128,7 @@ const UserList: React.FC = () => {
                         onChange={setDepartmentFilter}
                     />
                 </div>
-
-                {currentUser?.role === 'ADMIN' && (
-                
+                {currentUser?.role === "ADMIN" && (
                     <div className="flex gap-2">
                         <Link
                             to="/departments/new"
@@ -149,9 +145,8 @@ const UserList: React.FC = () => {
                             Add User
                         </Link>
                     </div>
-)}
+                )}
             </div>
-
             <div className="overflow-x-auto">
                 <Table>
                     <TableHeader>
@@ -171,6 +166,7 @@ const UserList: React.FC = () => {
                                     </div>
                                 </TableCell>
                             ))}
+                            <TableCell isHeader>Departments</TableCell>
                             <TableCell isHeader>Actions</TableCell>
                         </TableRow>
                     </TableHeader>
@@ -186,6 +182,7 @@ const UserList: React.FC = () => {
                                 <TableCell>
                                     <Badge color="primary">{user.role}</Badge>
                                 </TableCell>
+                                <TableCell>{getDepartmentNames(user.departmentIds)}</TableCell>
                                 <TableCell>
                                     <ActionIcons
                                         className="action-icon"
@@ -198,7 +195,6 @@ const UserList: React.FC = () => {
                     </TableBody>
                 </Table>
             </div>
-
             <div className="flex items-center justify-between mt-4">
                 <button
                     className="px-4 py-2 bg-gray-100 rounded disabled:opacity-50"

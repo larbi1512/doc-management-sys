@@ -18,11 +18,24 @@ export const createUser = async (userData: Omit<User, 'id'>): Promise<User> => {
     return response.data;
 };
 
-export const updateUser = async (id: string, userData: Partial<User>): Promise<User> => {
+export const updateUser = async (id: string, userData: Partial<{ username: string; email: string; password: string; role: string }>): Promise<User> => {
     const response = await api.put(`/users/${id}`, userData);
     return response.data;
 };
 
 export const deleteUser = async (id: string): Promise<void> => {
     await api.delete(`/users/${id}`);
+};
+
+export const assignDepartmentToUser = async (userId: number, departmentId: number): Promise<void> => {
+    await api.post(`/users/${userId}/departments`, { departmentId });
+};
+
+export const unassignDepartmentFromUser = async (userId: number, departmentId: number): Promise<void> => {
+    await api.delete(`/users/${userId}/departments/${departmentId}`);
+};
+
+export const fetchUserDepartments = async (userId: number): Promise<{ userId: number; departmentId: number }[]> => {
+    const response = await api.get(`/users/${userId}/departments`);
+    return response.data;
 };

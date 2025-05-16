@@ -4,16 +4,15 @@ import { useData } from "../../context/DataContext";
 import { useNavigate, useParams } from "react-router-dom";
 
 const UserForm: React.FC = () => {
-    const { users, addUser, updateUser } = useData();
+    const { users, addUser, updateUser, departments } = useData();
     const { id } = useParams();
     const navigate = useNavigate();
     const [formData, setFormData] = useState({
-        name: "",
+        username: "",
         email: "",
-        role: "",
-        status: "Active",
-        department: "",
-        phone: ""
+        password: "",
+        role: "USER",
+        departmentIds: [] as number[]
     });
 
     useEffect(() => {
@@ -21,12 +20,11 @@ const UserForm: React.FC = () => {
             const existingUser = users.find(u => u.id === Number(id));
             if (existingUser) {
                 setFormData({
-                    name: existingUser.name,
+                    username: existingUser.username,
                     email: existingUser.email,
+                    password: "", // Password not retrieved for security
                     role: existingUser.role,
-                    status: existingUser.status,
-                    department: existingUser.department,
-                    phone: existingUser.phone
+                    departmentIds: existingUser.departmentIds || []
                 });
             }
         }
@@ -35,10 +33,15 @@ const UserForm: React.FC = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
+            const userPayload = {
+                ...formData,
+                departmentIds: formData.departmentIds
+            };
+
             if (id) {
-                await updateUser(Number(id), formData);
+                await updateUser(Number(id), userPayload);
             } else {
-                await addUser(formData);
+                await addUser(userPayload);
             }
             navigate("/users");
         } catch (error) {
@@ -53,6 +56,15 @@ const UserForm: React.FC = () => {
         }));
     };
 
+    const handleDepartmentChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const options = Array.from(e.target.selectedOptions);
+        const values = options.map(option => Number(option.value));
+        setFormData(prev => ({
+            ...prev,
+            departmentIds: values
+        }));
+    };
+
     return (
         <div className="max-w-2xl p-4 mx-auto">
             <h2 className="mb-6 text-2xl font-bold">
@@ -61,11 +73,11 @@ const UserForm: React.FC = () => {
             <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div>
-                        <label className="block mb-2 font-medium">Name *</label>
+                        <label className="block mb-2 font-medium">Username *</label>
                         <input
                             type="text"
-                            name="name"
-                            value={formData.name}
+                            name="username"
+                            value={formData.username}
                             onChange={handleChange}
                             className="w-full p-2 border rounded"
                             required
@@ -83,49 +95,44 @@ const UserForm: React.FC = () => {
                         />
                     </div>
                     <div>
-                        <label className="block mb-2 font-medium">Role *</label>
+                        <label className="block mb-2 font-medium">Password {!id && '*'}</label>
                         <input
-                            type="text"
+                            type="password"
+                            name="password"
+                            value={formData.password}
+                            onChange={handleChange}
+                            className="w-full p-2 border rounded"
+                            required={!id}
+                        />
+                    </div>
+                    <div>
+                        <label className="block mb-2 font-medium">Role *</label>
+                        <select
                             name="role"
                             value={formData.role}
                             onChange={handleChange}
                             className="w-full p-2 border rounded"
                             required
-                        />
-                    </div>
-                    <div>
-                        <label className="block mb-2 font-medium">Status *</label>
-                        <select
-                            name="status"
-                            value={formData.status}
-                            onChange={handleChange}
-                            className="w-full p-2 border rounded"
-                            required
                         >
-                            <option value="Active">Active</option>
-                            <option value="Inactive">Inactive</option>
-                            <option value="On Leave">On Leave</option>
+                            <option value="USER">User</option>
+                            <option value="ADMIN">Administrator</option>
                         </select>
                     </div>
-                    <div>
-                        <label className="block mb-2 font-medium">Department</label>
-                        <input
-                            type="text"
-                            name="department"
-                            value={formData.department}
-                            onChange={handleChange}
-                            className="w-full p-2 border rounded"
-                        />
-                    </div>
-                    <div>
-                        <label className="block mb-2 font-medium">Phone</label>
-                        <input
-                            type="tel"
-                            name="phone"
-                            value={formData.phone}
-                            onChange={handleChange}
-                            className="w-full p-2 border rounded"
-                        />
+                    <div className="md:col-span-2">
+                        <label className="block mb-2 font-medium">Departments</label>
+                        <select
+                            multiple
+                            name="departmentIds"
+                            value={formData.departmentIds.map(String)}
+                            onChange={handleDepartmentChange}
+                            className="w-full h-32 p-2 border rounded"
+                        >
+                            {departments.map(dept => (
+                                <option key={dept.id} value={dept.id}>
+                                    {dept.name}
+                                </option>
+                            ))}
+                        </select>
                     </div>
                 </div>
                 <button
