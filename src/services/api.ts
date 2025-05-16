@@ -18,7 +18,6 @@ api.interceptors.request.use(
     }
     // Always set Content-Type for POST requests
     config.headers = config.headers ?? {};
-    config.headers['Content-Type'] = 'application/json';
     return config;
   },
   (error) => Promise.reject(error)
