@@ -13,7 +13,7 @@ export const fetchUserById = async (id: string): Promise<User> => {
     return response.data.data[0];
 };
 
-export const createUser = async (userData: { username: string; email: string; password: string; role: string }): Promise<User> => {
+export const createUser = async (userData: Omit<User, 'id'>): Promise<User> => {
     const response = await api.post('/users', userData);
     return response.data;
 };
