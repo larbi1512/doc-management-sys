@@ -11,12 +11,14 @@ api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = localStorage.getItem('token');
     console.log('[api] token=', token, '→', config.method, config.url);
-    if (token) {
-      // ensure headers object exists
+    // Only add Authorization header if token exists and it's not a login request
+    if (token && config.url !== '/auth/login') {
       config.headers = config.headers ?? {};
       config.headers['Authorization'] = `Bearer ${token}`;
-      config.headers['Content-Type'] = 'application/json';      
     }
+    // Always set Content-Type for POST requests
+    config.headers = config.headers ?? {};
+    config.headers['Content-Type'] = 'application/json';
     return config;
   },
   (error) => Promise.reject(error)

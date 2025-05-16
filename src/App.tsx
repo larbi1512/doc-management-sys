@@ -1,4 +1,7 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router";
+import { useEffect } from 'react';
+import { useDispatch } from 'react-redux';
+import type { AppDispatch } from './app/store';
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import SignIn from "./pages/AuthPages/SignIn";
 import SignUp from "./pages/AuthPages/SignUp";
 import NotFound from "./pages/OtherPage/NotFound";
@@ -27,72 +30,55 @@ import DocumentDetail from "./components/DocumentManagement/DocumentDetail";
 import { DataProvider } from "./context/DataContext";
 import ProtectedRoute from "./components/common/ProtectedRoute";
 import DepartmentForm from "./components/DepartmentManagement/DepartmentForm";
-
-
-
+import { restoreSession } from './features/auth/authThunks';
 export default function App() {
+  const dispatch = useDispatch<AppDispatch>();
+
+  useEffect(() => {
+    dispatch(restoreSession());
+  }, [dispatch]);
+
   return (
-    <>
     <DataProvider>
       <Router>
         <ScrollToTop />
         <Routes>
-            {/* Public Routes */}
-            <Route path="/signin" element={<SignIn />} />
-            <Route path="/signup" element={<SignUp />} />
+          {/* Public Routes */}
+          <Route path="/signin" element={<SignIn />} />
+          <Route path="/signup" element={<SignUp />} />
 
-            {/* Protected Routes */}
-            <Route element={<ProtectedRoute />}>
-          {/* Dashboard Layout */}
-          <Route element={<AppLayout />}>
-            <Route index path="/" element={<Home />} />
-
-            {/* Others Page */}
-            <Route path="/profile" element={<UserProfiles />} />
-            <Route path="/calendar" element={<Calendar />} />
-            <Route path="/blank" element={<Blank />} />
-
-            {/* User Management Routes */}
-            <Route path="/users" element={<UserListPage />} />
-            <Route path="/users/new" element={<UserForm />} />
-            <Route path="/users/:id" element={<UserDetail />} />
-            <Route path="/users/edit/:id" element={<UserForm />} />
-
-            {/* Department Management Routes */}
-            <Route path="/departments/new" element={<DepartmentForm />} />
-
-            {/* Document Management Routes */}
-            <Route path="/documents" element={<DocumentListPage />} />
-            <Route path="/documents/new" element={<DocumentForm />} />
-            <Route path="/documents/:id" element={<DocumentDetail />} />
-            <Route path="/documents/edit/:id" element={<DocumentForm />} />
-            {/* Forms */}
-            <Route path="/form-elements" element={<FormElements />} />
-
-            {/* Tables */}
-            <Route path="/basic-tables" element={<BasicTables />} />
-
-            {/* Ui Elements */}
-            <Route path="/alerts" element={<Alerts />} />
-            <Route path="/avatars" element={<Avatars />} />
-            <Route path="/badge" element={<Badges />} />
-            <Route path="/buttons" element={<Buttons />} />
-            <Route path="/images" element={<Images />} />
-            <Route path="/videos" element={<Videos />} />
-
-            {/* Charts */}
-            <Route path="/line-chart" element={<LineChart />} />
-            <Route path="/bar-chart" element={<BarChart />} />
+          {/* Protected Routes */}
+          <Route element={<ProtectedRoute />}>
+            {/* Dashboard Layout */}
+            <Route element={<AppLayout />}>
+              <Route index path="/" element={<Home />} />
+              <Route path="/profile" element={<UserProfiles />} />
+              <Route path="/calendar" element={<Calendar />} />
+              <Route path="/blank" element={<Blank />} />
+              <Route path="/users" element={<UserListPage />} />
+              <Route path="/users/new" element={<UserForm />} />
+              <Route path="/users/:id" element={<UserDetail />} />
+              <Route path="/users/edit/:id" element={<UserForm />} />
+              <Route path="/departments/new" element={<DepartmentForm />} />
+              <Route path="/documents" element={<DocumentListPage />} />
+              <Route path="/documents/new" element={<DocumentForm />} />
+              <Route path="/documents/:id" element={<DocumentDetail />} />
+              <Route path="/documents/edit/:id" element={<DocumentForm />} />
+              <Route path="/form-elements" element={<FormElements />} />
+              <Route path="/basic-tables" element={<BasicTables />} />
+              <Route path="/alerts" element={<Alerts />} />
+              <Route path="/avatars" element={<Avatars />} />
+              <Route path="/badge" element={<Badges />} />
+              <Route path="/buttons" element={<Buttons />} />
+              <Route path="/images" element={<Images />} />
+              <Route path="/videos" element={<Videos />} />
+              <Route path="/line-chart" element={<LineChart />} />
+              <Route path="/bar-chart" element={<BarChart />} />
+            </Route>
+            <Route path="*" element={<NotFound />} />
           </Route>
-
-         
-
-          {/* Fallback Route */}
-          <Route path="*" element={<NotFound />} />
-        </Route>
         </Routes>
       </Router>
-      </DataProvider>
-    </>
+    </DataProvider>
   );
 }

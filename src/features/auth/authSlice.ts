@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { loginUser, registerUser } from "./authThunks";
+import { loginUser, registerUser, logoutUser, restoreSession } from "./authThunks";
 
 // features/auth/authSlice.ts
 const initialState = {
@@ -10,6 +10,7 @@ const initialState = {
      } | null,
     token: null as string | null,
     isLoading: false,
+    isInitializing: true,
     error: null as string | null,
 };
 
@@ -48,6 +49,31 @@ const authSlice = createSlice({
             .addCase(registerUser.rejected, (state: { isLoading: boolean; error: string; }, action: { payload: string; }) => {
                 state.isLoading = false;
                 state.error = action.payload as string;
+            })
+            .addCase(logoutUser.fulfilled, (state) => {
+                state.isAuthenticated = false;
+                state.user = null;
+                state.token = null;
+                state.isLoading = false;
+                state.error = null;
+            })
+        .addCase(logoutUser.rejected, (state, action) => {
+            state.error = action.payload as string;
+        })
+            .addCase(restoreSession.fulfilled, (state, action) => {
+                state.isInitializing = false;
+                state.isAuthenticated = true;
+                state.token = action.payload.token;
+                state.user = {
+                    email: action.payload.email,
+                    role: action.payload.role,
+                };
+            })
+            .addCase(restoreSession.rejected, (state) => {
+                state.isInitializing = false;
+                state.isAuthenticated = false;
+                state.token = null;
+                state.user = null;
             });
     },
 });
